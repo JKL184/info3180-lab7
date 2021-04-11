@@ -4,10 +4,12 @@ Jinja2 Documentation:    http://jinja.pocoo.org/2/documentation/
 Werkzeug Documentation:  http://werkzeug.pocoo.org/documentation/
 This file creates your application.
 """
-
+import json
+import os
 from app import app
-from flask import render_template, request
-
+from flask import render_template, request, redirect, url_for, flash, session, abort,send_from_directory,jsonify
+from .forms import UploadForm
+from werkzeug.utils import secure_filename
 ###
 # Routing for your application.
 ###
@@ -29,6 +31,35 @@ def index(path):
     return render_template('index.html')
 
 
+
+@app.route('/api/upload', methods=['POST'])
+def upload():
+    # Instantiate your form class
+    form=UploadForm()
+    # Validate file upload on submit
+    if request.method == 'POST':
+        if form.validate_on_submit():
+        # Get file data and save to your uploads folder
+            desc=request.form['description']
+            pic=request.files['photo'] # or form.pic.data
+            filename=secure_filename(pic.filename)
+            pic.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            jsonmsg=jsonify(message="File Upload Successful",
+                            filename=filename,
+                            description=desc)   
+            flash('File Saved Successfully','success')        
+            return jsonmsg
+            #render_template('index.html',form=form,jsonMsg=jsonmsg)
+        else:
+            err=form_errors(form)
+            for er in err:
+                flash(er,'danger')
+            jsonErr=jsonify(errors=err)
+            return jsonErr
+            #render_template('index.html',form=form,jsonErr=jsonErr)
+
+
+
 # Here we define a function to collect form errors from Flask-WTF
 # which we can later use
 def form_errors(form):
@@ -41,7 +72,6 @@ def form_errors(form):
                     error
                 )
             error_messages.append(message)
-
     return error_messages
 
 

@@ -87,7 +87,7 @@ const upload_form={
         .then(function (jsonResponse) {
         // display a success message
         console.log(jsonResponse);
-        //window.location.reload();
+        window.location.reload();
         
         })
         .catch(function (error) {
